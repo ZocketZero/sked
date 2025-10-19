@@ -7,4 +7,4 @@ pub const BANNER: &str = r#"
                    
 "#;
 
-pub const BIN_NAME: &str = "utils";
+pub const BIN_NAME: &str = "htils";

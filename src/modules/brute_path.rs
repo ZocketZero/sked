@@ -1,11 +1,42 @@
-use crate::utils::WordlistType;
+use crate::utils::{Log, WordlistType, download_file};
 
+#[derive(Default, Clone)]
 /// ## Accepted http status codes.
 pub enum AcceptStatus {
     /// ## Accept all status codes.
     All,
     /// ## Accept specific status codes.
     Specific(Vec<u16>),
+    #[default]
+    /// Accept status within 200-299 range.
+    Ok,
+    /// ## Not accept any status codes.
+    None,
+}
+
+impl AcceptStatus {
+    pub fn parse(input: &str) -> anyhow::Result<Self> {
+        if input.is_empty() {
+            return Ok(AcceptStatus::None);
+        } else if input.to_lowercase() == "all" || input == "-" {
+            return Ok(AcceptStatus::All);
+        } else if input.to_lowercase() == "ok" {
+            return Ok(AcceptStatus::Ok);
+        } else {
+            let codes_result: Result<Vec<u16>, _> =
+                input.split(',').map(|s| s.trim().parse::<u16>()).collect();
+            match codes_result {
+                Ok(codes) => Ok(AcceptStatus::Specific(codes)),
+                Err(_) => Err(anyhow::anyhow!("Invalid status codes format")),
+            }
+        }
+    }
+    pub fn is_not_none(&self) -> bool {
+        match self {
+            AcceptStatus::None => false,
+            _ => true,
+        }
+    }
 }
 
 /// ## Brute force website's path url.
@@ -18,23 +49,156 @@ pub struct BrutePath {
     accept_status: AcceptStatus,
     /// Download found files.
     download: bool,
+    /// Run in parallel mode.
+    parallel: bool,
+    /// Output file to save results or downloaded files.
+    out: String
 }
 
 impl BrutePath {
     pub fn new(
         url: String,
-        wordlist: WordlistType,
-        accept_status: AcceptStatus,
+        wordlist: &str,
+        accept_status: &str,
         download: bool,
+        parallel: bool,
+        out: String
     ) -> Self {
+        let wordlist = match WordlistType::parse(wordlist) {
+            Ok(wl) => wl,
+            Err(e) => {
+                panic!("Error parsing wordlist: {}", e);
+            }
+        };
+        let accept_status = match AcceptStatus::parse(accept_status) {
+            Ok(as_) => as_,
+            Err(e) => {
+                panic!("Error parsing accept status: {}", e);
+            }
+        };
         Self {
             url,
             wordlist,
             accept_status,
             download,
+            parallel,
+            out
+        }
+    }
+
+    pub async fn run_parallel(&self) {
+        let wordlists = self.wordlist.get_wordlists();
+        let mut threads = Vec::new();
+        for wordlist in wordlists {
+            let url_clone = self.url.clone();
+            let accept_status_clone = self.accept_status.clone();
+            let out_path = self.out.clone();
+            let download_clone = self.download;
+
+            let t = tokio::spawn(async move {
+                let client = reqwest::Client::new();
+                let url = url_clone.replace(":path:", &wordlist);
+                let res = client.get(&url).send().await;
+
+                let res = match res {
+                    Ok(r) => r,
+                    Err(e) => {
+                        eprintln!("Error sending request to {}: {}", url, e);
+                        return;
+                    }
+                };
+
+                if accept_status_clone.is_not_none() {
+                    match &accept_status_clone {
+                        AcceptStatus::All => {
+                            Log::print_found(&url, res.status());
+                            if download_clone {
+                                let _ = download_file(url, out_path).await;
+                            }
+                        }
+                        AcceptStatus::Ok => {
+                            if res.status().is_success() {
+                                Log::print_found(&url, res.status());
+                                if download_clone {
+                                    let _ = download_file(url, out_path).await;
+                                }
+                            }
+                        }
+                        AcceptStatus::Specific(codes) => {
+                            if codes.contains(&res.status().as_u16()) {
+                                Log::print_found(&url, res.status());
+                                if download_clone {
+                                    let _ = download_file(url, out_path).await;
+                                }
+                            }
+                        }
+                        AcceptStatus::None => {}
+                    }
+                } else {
+                    Log::print_found(&url, res.status());
+                    if download_clone {
+                        let _ = download_file(url, out_path).await;
+                    }
+                }
+            });
+            threads.push(t);
+        }
+        for t in threads {
+            t.await.unwrap();
+        }
+    }
+    pub async fn run_normal(&self) {
+        let wordlists = self.wordlist.get_wordlists();
+        for wordlist in wordlists {
+            let client = reqwest::Client::new();
+            let url = self.url.replace(":path:", &wordlist);
+            let res = client.get(&url).send().await;
+            let out_path = self.out.clone();
+
+            let res = match res {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error sending request to {}: {}", url, e);
+                    return;
+                }
+            };
+
+            if self.accept_status.is_not_none() {
+                match &self.accept_status {
+                    AcceptStatus::All => {
+                        Log::print_found(&url, res.status());
+                        if self.download {
+                            let _ = download_file(url, out_path.clone()).await;
+                        }
+                    }
+                    AcceptStatus::Ok => {
+                        if res.status().is_success() {
+                            Log::print_found(&url, res.status());
+                            if self.download {
+                                let _ = download_file(url, out_path).await;
+                            }
+                        }
+                    }
+                    AcceptStatus::Specific(codes) => {
+                        if codes.contains(&res.status().as_u16()) {
+                            Log::print_found(&url, res.status());
+                            if self.download {
+                                let _ = download_file(url, out_path).await;
+                            }
+                        }
+                    }
+                    AcceptStatus::None => {}
+                }
+            } else {
+                Log::print_found(&url, res.status());
+            }
         }
     }
     pub async fn run(&self) {
-        let client = reqwest::Client::new();
+        if self.parallel {
+            self.run_parallel().await;
+        } else {
+            self.run_normal().await;
+        }
     }
 }
