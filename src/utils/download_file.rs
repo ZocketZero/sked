@@ -5,7 +5,7 @@ use tokio::fs;
 ///
 /// ```
 /// # use tokio_test;
-/// # use crate::htils::utils::download_file;
+/// # use crate::sked::utils::download_file;
 /// # tokio_test::block_on(async {
 /// let url = "https://crates.io/assets/cargo.png".to_string();
 /// let out_path = "/tmp/".to_string();
