@@ -1,8 +1,8 @@
 use crate::utils::WordlistType;
 
 pub enum AcceptStatus {
-    all,
-    specific(Vec<u16>),
+    All,
+    Specific(Vec<u16>),
 }
 
 /// Brute force website's path url.
