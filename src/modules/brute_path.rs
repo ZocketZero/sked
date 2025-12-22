@@ -17,11 +17,11 @@ pub enum AcceptStatus {
 impl AcceptStatus {
     pub fn parse(input: &str) -> anyhow::Result<Self> {
         if input.is_empty() {
-            return Ok(AcceptStatus::None);
+            Ok(AcceptStatus::None)
         } else if input.to_lowercase() == "all" || input == "-" {
-            return Ok(AcceptStatus::All);
+            Ok(AcceptStatus::All)
         } else if input.to_lowercase() == "ok" {
-            return Ok(AcceptStatus::Ok);
+            Ok(AcceptStatus::Ok)
         } else {
             let codes_result: Result<Vec<u16>, _> =
                 input.split(',').map(|s| s.trim().parse::<u16>()).collect();
@@ -32,10 +32,7 @@ impl AcceptStatus {
         }
     }
     pub fn is_not_none(&self) -> bool {
-        match self {
-            AcceptStatus::None => false,
-            _ => true,
-        }
+        !matches!(self, AcceptStatus::None)
     }
 }
 
@@ -229,9 +226,9 @@ impl BrutePath {
     }
 }
 
-async fn save_log_to_file(url: &String, res: reqwest::Response, out_path: &String) {
-    let write_file = WriteFile::new(out_path.clone());
+async fn save_log_to_file(url: &String, res: reqwest::Response, out_path: &str) {
+    let write_file = WriteFile::new(out_path.to_string());
     let _ = write_file
-        .append(Log::format(&url, res.status()).as_bytes().to_vec().as_ref())
+        .append(Log::format(url, res.status()).as_bytes().to_vec().as_ref())
         .await;
 }

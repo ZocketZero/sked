@@ -15,7 +15,7 @@ use tokio::fs;
 /// ```
 pub async fn download_file(url: String, out_path: String) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
-   let res = client.get(&url).send().await?;
+    let res = client.get(&url).send().await?;
     let file_name = match url.split("/").last() {
         Some(fname) => fname,
         None => return Err(anyhow!("Failed created file name")),

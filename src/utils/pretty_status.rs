@@ -12,7 +12,7 @@ pub fn pretty_status(status: u16) -> String {
 }
 
 pub trait PrettyStatus {
-     fn pretty_status(&self) -> String; 
+    fn pretty_status(&self) -> String;
 }
 
 impl PrettyStatus for u16 {

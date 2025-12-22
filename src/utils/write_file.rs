@@ -11,7 +11,7 @@ impl WriteFile {
     pub fn write(&self, content: &str) -> std::io::Result<()> {
         std::fs::write(&self.path, content)
     }
-    pub async fn append(&self, data: &Vec<u8>) -> anyhow::Result<()> {
+    pub async fn append(&self, data: &[u8]) -> anyhow::Result<()> {
         let mut file = tokio::fs::OpenOptions::new()
             .write(true)
             .create(true)

@@ -3,7 +3,7 @@ name = "sked"
 description = "utilities pack for pentest"
 authors = ["Nawasan <nawasan.dev@gmail.com>"]
 license = "GPL-3.0-only"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 repository = "https://github.com/ZocketZero/sked"
 readme = "README.md"
@@ -14,9 +14,9 @@ include = ["src/", "LICENSE"]
 [dependencies]
 anyhow = "1.0.100"
 clap = { version = "4.5.53", features = ["derive"] }
-clap_complete = "4.5.61"
+clap_complete = "4.5.62"
 colored = "3.0.0"
 regex = "1.12.2"
-reqwest = "0.12.24"
+reqwest = "0.12.26"
 tokio = { version = "1.48.0", features = ["full"] }
 tokio-test = "0.4.4"

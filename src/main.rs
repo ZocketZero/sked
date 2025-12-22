@@ -2,7 +2,7 @@ use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{Shell, generate};
 use sked::{
     constant::{BANNER, BIN_NAME},
-    modules::BrutePath,
+    modules::{BrutePath, PublicIp},
 };
 
 #[derive(Parser)]
@@ -41,20 +41,30 @@ enum Command {
         #[arg(short, long, default_value = "./")]
         out: Option<String>,
     },
+    /// Get Public ip
+    Pub {
+        /// get only IPv4
+        #[arg(short = '4', long, default_value_t = false)]
+        ipv4: bool,
+        /// get only IPv6
+        #[arg(short = '6', long, default_value_t = false)]
+        ipv6: bool,
+    },
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     if let Some(command) = args.command {
         match command {
+            Command::Pub { ipv4, ipv6 } => PublicIp::new(ipv4, ipv6).run().await?,
             Command::BrutePath {
                 url,
                 wordlist,
                 accept_status,
                 download,
                 parallel,
-                out
+                out,
             } => {
                 let accept_status = accept_status.unwrap_or_default();
                 BrutePath::new(url, &wordlist, &accept_status, download, parallel, out)
@@ -75,4 +85,5 @@ async fn main() {
     } else {
         let _ = Args::command().print_help();
     }
+    Ok(())
 }

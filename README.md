@@ -1,6 +1,6 @@
 # Sked
 
-utilities pack for pentest.
+Utilities pack for pentest.
 
 ## Installation
 
@@ -8,7 +8,7 @@ utilities pack for pentest.
 
 Install via cargo (You need to install Rust on your device). [official rust document for installation](rust-lang.org/eeetools/install/)
 
-after you have installed rust, run the command bellow to install `Sked`.
+After you have installed rust, run the command bellow to install `Sked`.
 
 ```bash
 cargo install sked
@@ -16,9 +16,14 @@ cargo install sked
 
 ### Basic usage
 
-brute force website's directories via command `brute-path`
+Brute force website's directories via command `brute-path`
 
 ```bash
 sked brute-path --url http://example.com/:path: --wordlist ./wordlist.txt
 ```
 
+Check your public IP.
+
+```bash
+sked pub
+```
