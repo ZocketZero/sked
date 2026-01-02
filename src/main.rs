@@ -2,12 +2,12 @@ use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{Shell, generate};
 use sked::{
     constant::{BANNER, BIN_NAME},
-    modules::{BrutePath, PublicIp},
+    modules::{BrutePath, PubArg, PublicIp},
 };
 
 #[derive(Parser)]
 #[command(name = BIN_NAME, author, version, about, long_about = None, before_help= BANNER)]
-struct Args {
+struct Argv {
     #[clap(subcommand)]
     command: Option<Command>,
 }
@@ -42,22 +42,19 @@ enum Command {
         out: Option<String>,
     },
     /// Get Public ip
-    Pub {
-        /// get only IPv4
-        #[arg(short = '4', long, default_value_t = false)]
-        ipv4: bool,
-        /// get only IPv6
-        #[arg(short = '6', long, default_value_t = false)]
-        ipv6: bool,
-    },
+    Pub(PubArg),
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let args = Args::parse();
+    let args = Argv::parse();
     if let Some(command) = args.command {
         match command {
-            Command::Pub { ipv4, ipv6 } => PublicIp::new(ipv4, ipv6).run().await?,
+            Command::Pub(pub_arg) => {
+                PublicIp::new(pub_arg.ipv4, pub_arg.ipv6, pub_arg.verbose)
+                    .run()
+                    .await?;
+            }
             Command::BrutePath {
                 url,
                 wordlist,
@@ -76,14 +73,14 @@ async fn main() -> anyhow::Result<()> {
             Command::Completions { shell } => {
                 generate(
                     shell,
-                    &mut Args::command(),
+                    &mut Argv::command(),
                     BIN_NAME,
                     &mut std::io::stdout(),
                 );
             }
         }
     } else {
-        let _ = Args::command().print_help();
+        let _ = Argv::command().print_help();
     }
     Ok(())
 }
