@@ -1,4 +1,27 @@
 use crate::utils::{Log, WordlistType, WriteFile, download_file};
+use clap::Args;
+
+#[derive(Args)]
+pub struct BrutePathArg {
+    /// Target URL with :path: as placeholder
+    #[arg(short, long)]
+    pub url: String,
+    /// Wordlist type: range or file (e.g., 1-100 or ./wordlist.txt)
+    #[arg(short, long)]
+    pub wordlist: String,
+    /// Accepted HTTP status codes (comma separated) (e.g., 200,301) or 'all' or 'ok' for 200-299
+    #[arg(short, long, default_value = "ok")]
+    pub accept_status: Option<String>,
+    /// Download found files
+    #[arg(short, long, default_value_t = false)]
+    pub download: bool,
+    /// Run in parallel mode
+    #[arg(short, long, default_value_t = false)]
+    pub parallel: bool,
+    /// Output file to save results or downloaded files.
+    #[arg(short, long, default_value = "./")]
+    pub out: Option<String>,
+}
 
 #[derive(Default, Clone)]
 /// ## Accepted http status codes.
