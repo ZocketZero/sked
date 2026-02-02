@@ -1,4 +1,4 @@
-use crate::utils::{Log, WordlistType, WriteFile, download_file};
+use crate::utils::{Log, RunCommand, WordlistType, WriteFile, download_file};
 use clap::Args;
 
 #[derive(Args)]
@@ -21,6 +21,22 @@ pub struct BrutePathArg {
     /// Output file to save results or downloaded files.
     #[arg(short, long, default_value = "./")]
     pub out: Option<String>,
+}
+
+impl RunCommand for BrutePathArg {
+    async fn run(&self) {
+        let accept_status = self.accept_status.clone().unwrap_or_default();
+        BrutePath::new(
+            self.url.clone(),
+            &self.wordlist,
+            &accept_status,
+            self.download,
+            self.parallel,
+            self.out.clone(),
+        )
+        .run()
+        .await;
+    }
 }
 
 #[derive(Default, Clone)]

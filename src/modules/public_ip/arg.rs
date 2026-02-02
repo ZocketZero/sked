@@ -1,5 +1,7 @@
 use clap::Args;
 
+use crate::{modules::PublicIp, utils::RunCommand};
+
 #[derive(Args)]
 pub struct PubArg {
     /// get only IPv4
@@ -10,4 +12,12 @@ pub struct PubArg {
     pub ipv6: bool,
     #[arg(short, long, default_value_t = false)]
     pub verbose: bool,
+}
+
+impl RunCommand for PubArg {
+    async fn run(&self) {
+        let _ = PublicIp::new(self.ipv4, self.ipv6, self.verbose)
+            .run()
+            .await;
+    }
 }

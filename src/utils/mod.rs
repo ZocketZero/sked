@@ -4,6 +4,7 @@ mod log;
 mod pretty_status;
 mod wordlist;
 mod write_file;
+mod run_command;
 
 // public
 pub use download_file::download_file;
@@ -12,3 +13,4 @@ pub use pretty_status::PrettyStatus;
 pub use wordlist::Wordlist;
 pub use wordlist::WordlistType;
 pub use write_file::WriteFile;
+pub use run_command::RunCommand;
