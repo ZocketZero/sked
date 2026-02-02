@@ -14,6 +14,11 @@ async fn main() -> anyhow::Result<()> {
             #[cfg(feature = "brute-path")]
             Command::BrutePath(bp_arg) => bp_arg.run().await,
 
+            #[cfg(feature = "bitcoin")]
+            Command::Btc(btc_args) => {
+                btc_args.run();
+            }
+
             Command::Hi => println!("Hi, have a good day!"),
 
             #[cfg(feature = "sum")]

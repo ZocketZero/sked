@@ -2,15 +2,15 @@
 mod download_file;
 mod log;
 mod pretty_status;
+mod run_command;
 mod wordlist;
 mod write_file;
-mod run_command;
 
 // public
 pub use download_file::download_file;
 pub use log::Log;
 pub use pretty_status::PrettyStatus;
+pub use run_command::RunCommand;
 pub use wordlist::Wordlist;
 pub use wordlist::WordlistType;
 pub use write_file::WriteFile;
-pub use run_command::RunCommand;

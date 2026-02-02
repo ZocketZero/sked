@@ -28,4 +28,7 @@ pub enum Command {
     /// Get Public ip
     #[cfg(feature = "public")]
     Pub(PubArg),
+    /// Generate Bitcoin wallet
+    #[cfg(feature = "bitcoin")]
+    Btc(btc_wallet::utils::Args),
 }
