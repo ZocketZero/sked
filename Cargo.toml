@@ -3,7 +3,7 @@ name = "sked"
 description = "utilities pack for pentest"
 authors = ["Nawasan <nawasan.dev@gmail.com>"]
 license = "GPL-3.0-only"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 repository = "https://github.com/ZocketZero/sked"
 readme = "README.md"
@@ -18,13 +18,13 @@ path = "./src/bin/btc.rs"
 required-features = ["bitcoin"]
 
 [dependencies]
-anyhow = "1.0.100"
-btc-wallet = "0.0.1"
-clap = { version = "4.5.56", features = ["derive"] }
+anyhow = "1.0.101"
+btc-wallet = "0.2.0"
+clap = { version = "4.5.57", features = ["derive"] }
 clap_complete = "4.5.65"
 colored = "3.1.1"
-regex = "1.12.2"
-reqwest = "0.13.1"
+regex = "1.12.3"
+reqwest = "0.13.2"
 tokio = { version = "1.49.0", features = ["full"] }
 tokio-test = "0.4.5"
 
