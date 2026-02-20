@@ -36,10 +36,12 @@ pub enum Command {
     /// A command to brute-force website paths.
     /// This command takes arguments defined in `BrutePathArg`.
     #[cfg(feature = "brute-path")]
+    #[clap(visible_alias = "bp")]
     BrutePath(BrutePathArg),
     /// A command to get the public IP address.
     /// This command takes arguments defined in `PubArg`.
     #[cfg(feature = "public")]
+    #[clap(visible_alias = "p")]
     Pub(PubArg),
     /// A command to generate a Bitcoin wallet.
     /// This command uses arguments from the `btc_wallet` crate.
