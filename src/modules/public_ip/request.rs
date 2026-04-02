@@ -4,8 +4,8 @@
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use reqwest::{
-    header::{HeaderMap, HeaderValue},
     Client,
+    header::{HeaderMap, HeaderValue},
 };
 
 /// Enum to specify the desired IP version for the request client.

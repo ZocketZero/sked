@@ -1,7 +1,7 @@
 //! This module provides the functionality for the `brute-path` command,
 //! which brute-forces website directories using a wordlist.
 
-use crate::utils::{download_file, Log, RunCommand, WordlistType, WriteFile};
+use crate::utils::{Log, RunCommand, Wordlist, WriteFile, download_file};
 use clap::Args;
 
 /// Defines the command-line arguments for the `brute-path` subcommand.
@@ -26,6 +26,10 @@ pub struct BrutePathArg {
     /// The output directory to save results or downloaded files.
     #[arg(short, long, default_value = "./")]
     pub out: Option<String>,
+
+    /// verbose
+    #[arg(short, long, default_value_t = false)]
+    pub verbose: bool,
 }
 
 impl RunCommand for BrutePathArg {
@@ -40,6 +44,7 @@ impl RunCommand for BrutePathArg {
             self.download,
             self.parallel,
             self.out.clone(),
+            self.verbose,
         )
         .run()
         .await;
@@ -90,7 +95,7 @@ pub struct BrutePath {
     /// The target URL template.
     url: String,
     /// The wordlist to use for generating paths.
-    wordlist: WordlistType,
+    wordlist: Wordlist,
     /// The criteria for accepting HTTP status codes.
     accept_status: AcceptStatus,
     /// Flag to determine whether to download found content.
@@ -99,6 +104,8 @@ pub struct BrutePath {
     parallel: bool,
     /// The output path for logs or downloaded files.
     out: Option<String>,
+    ///Verbose
+    verbose: bool,
 }
 
 impl BrutePath {
@@ -110,10 +117,12 @@ impl BrutePath {
         download: bool,
         parallel: bool,
         out: Option<String>,
+        verbose: bool,
     ) -> Self {
         // Parse the wordlist and accept_status strings into their respective enums.
-        let wordlist = WordlistType::parse(wordlist).expect("Error parsing wordlist");
-        let accept_status = AcceptStatus::parse(accept_status).expect("Error parsing accept status");
+        let wordlist = Wordlist::parse(wordlist).expect("Error parsing wordlist");
+        let accept_status =
+            AcceptStatus::parse(accept_status).expect("Error parsing accept status");
 
         Self {
             url,
@@ -122,16 +131,16 @@ impl BrutePath {
             download,
             parallel,
             out,
+            verbose,
         }
     }
 
     /// Runs the brute-forcing process in parallel using Tokio tasks.
-    pub async fn run_parallel(&self) {
-        let wordlists = self.wordlist.get_wordlists();
+    pub async fn run_parallel(&mut self) {
         let mut threads = Vec::new();
 
         // Spawn a new task for each word in the wordlist.
-        for wordlist in wordlists {
+        while let Some(wordlist) = self.wordlist.next() {
             let url_clone = self.url.clone();
             let accept_status_clone = self.accept_status.clone();
             let is_out_path_set = self.out.is_some();
@@ -178,9 +187,11 @@ impl BrutePath {
     }
 
     /// Runs the brute-forcing process sequentially.
-    pub async fn run_normal(&self) {
-        let wordlists = self.wordlist.get_wordlists();
-        for wordlist in wordlists {
+    pub async fn run_normal(&mut self) {
+        while let Some(wordlist) = self.wordlist.next() {
+            if self.verbose {
+                println!("try: {}", wordlist);
+            }
             let client = reqwest::Client::new();
             let url = self.url.replace(":path:", &wordlist);
             let res = match client.get(&url).send().await {
@@ -215,7 +226,7 @@ impl BrutePath {
     }
 
     /// Determines whether to run in parallel or normal mode.
-    pub async fn run(&self) {
+    pub async fn run(&mut self) {
         if self.parallel {
             self.run_parallel().await;
         } else {

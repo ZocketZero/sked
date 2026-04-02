@@ -1,70 +1,119 @@
 //! This module provides utilities for handling wordlists, which can be generated
 //! from a numeric range or loaded from a file.
 
-use std::fs;
-use anyhow::Ok;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 /// Represents the source of a wordlist.
-pub enum WordlistType {
+enum WordlistType {
     /// A wordlist generated from a continuous range of numbers.
-    Range(u32, u32),
+    Range(WordlistRange),
     /// A wordlist loaded from a file path.
-    File(String),
+    File(WordlistFile),
 }
 
 impl WordlistType {
-    /// Parses an input string to determine if it's a range (e.g., "1-100") or a file path.
-    pub fn parse(input: &str) -> anyhow::Result<Self> {
-        let reg = regex::Regex::new(r"^(\d+)-(\d+)$").unwrap();
-        if let Some(caps) = reg.captures(input) {
-            let start = caps[1].parse().map_err(|_| anyhow::anyhow!("Invalid start number"))?;
-            let end = caps[2].parse().map_err(|_| anyhow::anyhow!("Invalid end number"))?;
-            Ok(Self::Range(start, end))
-        } else {
-            Ok(Self::File(input.to_string()))
-        }
-    }
-
-    /// Retrieves the wordlist as a vector of strings, based on the enum variant.
-    pub fn get_wordlists(&self) -> Vec<String> {
+    pub(crate) fn next(&mut self) -> Option<String> {
         match self {
-            WordlistType::Range(b, e) => Wordlist::range(*b, *e),
-            WordlistType::File(path) => Wordlist::from_file(path.clone()),
+            WordlistType::Range(wordlist_range) => wordlist_range.next(),
+            WordlistType::File(f) => f.next(),
         }
     }
 }
 
+pub trait WordlistNext {
+    fn next(&mut self) -> Option<String>;
+}
 /// A utility struct for generating wordlists.
-pub struct Wordlist;
+pub struct Wordlist {
+    wordlist_type: WordlistType,
+}
 
 impl Wordlist {
-    /// Creates a vector of strings representing a numeric range.
-    pub fn range(from: u32, to: u32) -> Vec<String> {
-        (from..=to).map(|i| i.to_string()).collect()
+    pub fn next(&mut self) -> Option<String> {
+        self.wordlist_type.next()
     }
+    pub fn parse(input: &str) -> anyhow::Result<Self> {
+        let reg = regex::Regex::new(r"^(\d+)-(\d+)$").unwrap();
+        if let Some(caps) = reg.captures(input) {
+            let start = caps[1]
+                .parse()
+                .map_err(|_| anyhow::anyhow!("Invalid start number"))?;
+            let end = caps[2]
+                .parse()
+                .map_err(|_| anyhow::anyhow!("Invalid end number"))?;
+            Ok(Self {
+                wordlist_type: WordlistType::Range(WordlistRange::new(start, end)),
+            })
+        } else {
+            Ok(Self {
+                wordlist_type: WordlistType::File(WordlistFile::new(input)?),
+            })
+        }
+    }
+}
 
-    /// Reads a file and returns its lines as a vector of strings.
-    pub fn from_file(path: String) -> Vec<String> {
-        fs::read_to_string(path)
-            .expect("Failed to read wordlists file")
-            .lines()
-            .map(String::from)
-            .collect()
+struct WordlistRange {
+    current: u128,
+    max: u128,
+}
+
+impl WordlistRange {
+    pub fn new(min: u128, max: u128) -> Self {
+        Self { current: min, max }
+    }
+}
+
+impl WordlistNext for WordlistRange {
+    fn next(&mut self) -> Option<String> {
+        if self.current <= self.max {
+            let value = self.current;
+            self.current += 1;
+            Some(value.to_string())
+        } else {
+            None
+        }
+    }
+}
+
+struct WordlistFile {
+    buffer: BufReader<File>,
+}
+
+impl WordlistFile {
+    fn new(path: &str) -> anyhow::Result<Self> {
+        let file = File::open(path)?;
+        Ok(Self {
+            buffer: BufReader::new(file),
+        })
+    }
+}
+
+impl WordlistNext for WordlistFile {
+    fn next(&mut self) -> Option<String> {
+        let mut line = String::new();
+        if let Ok(c) = self.buffer.read_line(&mut line)
+            && c > 0
+        {
+            Some(line.trim_end().to_string())
+        } else {
+            None
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn parse_wordlist_range() {
-        let wl = WordlistType::parse("10-20").unwrap();
-        if let WordlistType::Range(start, end) = wl {
-            assert_eq!(start, 10);
-            assert_eq!(end, 20);
-        } else {
-            panic!("Failed to parse wordlist range");
+        let mut wl = Wordlist::parse("10-20").unwrap();
+        let mut count = 10;
+        while let Some(n) = wl.next() {
+            assert_eq!(n, count.to_string());
+            count += 1;
         }
     }
 
@@ -74,16 +123,15 @@ mod tests {
         let content = "line1\nline2\nline3";
         fs::write("test_wordlist.txt", content).unwrap();
 
-        let r = Wordlist::from_file("test_wordlist.txt".to_string());
-        assert_eq!(r, vec!["line1", "line2", "line3"]);
+        let mut wordlist = Wordlist::parse("test_wordlist.txt").unwrap();
+        let check = ["line1", "line2", "line3"];
+        for i in 0..3 {
+            if let Some(wl) = wordlist.next() {
+                assert_eq!(check[i], wl.as_str());
+            }
+        }
 
         // Clean up the dummy file
         fs::remove_file("test_wordlist.txt").unwrap();
-    }
-
-    #[test]
-    fn wordlist_range() {
-        let wordlist = Wordlist::range(0, 5);
-        assert_eq!(wordlist, vec!["0", "1", "2", "3", "4", "5"]);
     }
 }

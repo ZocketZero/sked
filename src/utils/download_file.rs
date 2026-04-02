@@ -1,6 +1,6 @@
 //! This module provides a utility function for downloading files from a given URL.
 
-use anyhow::{anyhow, Ok};
+use anyhow::{Ok, anyhow};
 use tokio::fs;
 
 /// Downloads a file from a URL and saves it to a specified output path.

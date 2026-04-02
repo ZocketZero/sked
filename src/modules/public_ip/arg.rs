@@ -1,8 +1,8 @@
 //! This module defines the command-line arguments for the `pub` subcommand,
 //! which is used to fetch the user's public IP address.
 
-use clap::Args;
 use crate::{modules::PublicIp, utils::RunCommand};
+use clap::Args;
 
 /// Arguments for the `pub` command.
 #[derive(Args)]
