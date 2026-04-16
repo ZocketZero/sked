@@ -7,5 +7,7 @@ pub mod args;
 pub mod constant;
 /// `modules`: Contains the core logic for each of the application's features (subcommands).
 pub mod modules;
+/// Shell to generate auto complete
+pub mod shell;
 /// `utils`: Provides common utility functions and traits used by various modules.
 pub mod utils;

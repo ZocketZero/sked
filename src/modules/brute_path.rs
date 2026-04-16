@@ -1,6 +1,8 @@
 //! This module provides the functionality for the `brute-path` command,
 //! which brute-forces website directories using a wordlist.
 
+use std::path::PathBuf;
+
 use crate::utils::{Log, RunCommand, Wordlist, WriteFile, download_file};
 use clap::Args;
 
@@ -12,7 +14,7 @@ pub struct BrutePathArg {
     pub url: String,
     /// Wordlist source, which can be a file path or a number range (e.g., "1-100").
     #[arg(short, long)]
-    pub wordlist: String,
+    pub wordlist: PathBuf,
     /// Specifies which HTTP status codes to accept as valid.
     /// Can be a comma-separated list (e.g., "200,301"), "all", or "ok" (for 200-299).
     #[arg(short, long, default_value = "ok")]
@@ -39,7 +41,7 @@ impl RunCommand for BrutePathArg {
         // Create and run a new BrutePath instance.
         BrutePath::new(
             self.url.clone(),
-            &self.wordlist,
+            &self.wordlist.to_string_lossy(),
             &accept_status,
             self.download,
             self.parallel,

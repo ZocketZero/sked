@@ -6,6 +6,8 @@ use crate::constant::{BANNER, BIN_NAME};
 use crate::modules::BrutePathArg;
 #[cfg(feature = "public")]
 use crate::modules::PubArg;
+#[cfg(feature = "completions")]
+use crate::shell::Shell;
 use clap::{Parser, Subcommand};
 
 /// Represents the main structure for command-line arguments.
@@ -31,7 +33,7 @@ pub enum Command {
     #[cfg(feature = "completions")]
     Completions {
         /// The shell for which to generate completions.
-        shell: clap_complete::Shell,
+        shell: Shell,
     },
     /// A command to brute-force website paths.
     /// This command takes arguments defined in `BrutePathArg`.

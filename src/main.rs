@@ -41,15 +41,7 @@ async fn main() -> anyhow::Result<()> {
             // Handles the 'completions' command to generate shell completions.
             #[cfg(feature = "completions")]
             Command::Completions { shell } => {
-                use clap_complete::generate;
-                use sked::constant::BIN_NAME;
-                // Generate and print the completions for the specified shell.
-                generate(
-                    shell,
-                    &mut Argv::command(),
-                    BIN_NAME,
-                    &mut std::io::stdout(),
-                );
+                shell.generate(Argv::command());
             }
         }
     } else {
