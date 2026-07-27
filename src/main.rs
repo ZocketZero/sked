@@ -44,6 +44,12 @@ async fn main() -> anyhow::Result<()> {
                 shell.generate(Argv::command());
             }
         }
+    } else if args.version {
+        println!(
+            "{} ({})",
+            env!("CARGO_PKG_VERSION"),
+            std::env::var("RUSTUP_TOOLCHAIN").unwrap()
+        );
     } else {
         // If no subcommand is provided, print the help message.
         let _ = Argv::command().print_help();

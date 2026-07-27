@@ -13,11 +13,14 @@ use clap::{Parser, Subcommand};
 /// Represents the main structure for command-line arguments.
 /// It includes the command to be executed.
 #[derive(Parser)]
-#[command(name = BIN_NAME, author, version, about, long_about = None, before_help= BANNER)]
+#[command(name = BIN_NAME, author, about, long_about = None, before_help= BANNER)]
 pub struct Argv {
     /// The command to execute.
     #[clap(subcommand)]
     pub command: Option<Command>,
+    /// Print version
+    #[arg(short='V', long)]
+    pub version: bool
 }
 
 /// Enumerates the available subcommands for the `sked` application.
