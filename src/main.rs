@@ -2,9 +2,12 @@
 //! This module parses command-line arguments and executes the corresponding command.
 
 use clap::{CommandFactory, Parser};
-use sked::args::{Argv, Command};
 #[allow(unused)]
 use sked::utils::RunCommand;
+use sked::{
+    args::{Argv, Command},
+    constant::{PKG_VERSION, TARGET},
+};
 
 /// The main asynchronous function that runs the application.
 /// It parses arguments and dispatches to the appropriate command handler.
@@ -45,11 +48,7 @@ async fn main() -> anyhow::Result<()> {
             }
         }
     } else if args.version {
-        println!(
-            "{} ({})",
-            env!("CARGO_PKG_VERSION"),
-            std::env::var("RUSTUP_TOOLCHAIN").unwrap()
-        );
+        println!("{} ({})", PKG_VERSION, TARGET);
     } else {
         // If no subcommand is provided, print the help message.
         let _ = Argv::command().print_help();
